@@ -1,6 +1,6 @@
 # StatEye :eye_speech_bubble:
 
-An eye that keeps track of what you do on Roblox and shares it with others.
+An eye that keeps track of your Roblox status and shares it with others.
 
 ![application](res/roblox-presence.png) ![application](res/roblox-studio-presence.png)
 
