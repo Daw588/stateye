@@ -64,7 +64,21 @@ pub fn get_config() -> Config {
 					 0       1
 			*/
 
-			let key_value = line.split_once("=").unwrap();
+			let split_line = line.split_once("=");
+			if split_line.is_none() {
+				/* 
+					Skip over this line as it
+					does not have a separator.
+
+					This will prevent the program
+					from crashing when blank lines
+					are present in the config file.
+				*/
+				continue;
+			}
+
+			let key_value = split_line.unwrap();
+			
 			let key = key_value.0;
 			let value = key_value.1;
 
