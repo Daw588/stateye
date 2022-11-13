@@ -1,0 +1,34 @@
+[package]
+name = "stateye"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+reqwest = { version = "0.11.12", features = ["json"] }
+tokio = { version = "1.21.2", features = ["full"] }
+serde_json = "1"
+discord-rich-presence = "0.2.3"
+
+[profile.dev]
+lto = "off"
+strip = "none"
+codegen-units = 256
+panic = "unwind"
+opt-level = 0
+incremental = true
+overflow-checks = true
+debug-assertions = true
+debug = true
+rpath = false
+
+[profile.release]
+lto = "fat"
+strip = "symbols"
+codegen-units = 1
+panic = "abort"
+opt-level = 3 # z for file size optimizations
+incremental = false
+overflow-checks = false
+debug-assertions = false
+debug = false
+rpath = false
