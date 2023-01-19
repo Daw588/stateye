@@ -27,10 +27,10 @@ fn str_to_bool(str: &str) -> bool {
 pub fn get_config() -> Config {
 	// Find where our working directory is
 	let working_dir_path = std::env::current_dir().unwrap();
-	let working_dir_path = working_dir_path.as_os_str().to_str().unwrap();
 
 	// Find the config file relative to our working directory
-	let config_path = format!("{}\\{}", working_dir_path, config::CONFIG_FILE_NAME);
+	let config_path = working_dir_path.join(config::CONFIG_FILE_NAME);
+	let config_path = config_path.to_str().unwrap();
 
 	// Default configuration in case file cannot be found
 	let mut config = Config {
