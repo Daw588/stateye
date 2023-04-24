@@ -1,4 +1,17 @@
-#![windows_subsystem = "windows"] // Do not create console instance and instead run in the background
+/*
+	In release build, run in the background.
+	In debug build, show the console contents
+	for the purpose of viewing logs and errors.
+*/
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+
+// Do not include println calls in release build
+macro_rules! println {
+	($($rest:tt)*) => {
+		#[cfg(debug_assertions)]
+		std::println!($($rest)*)
+	}
+}
 
 mod roblox;
 mod utils;
@@ -8,15 +21,20 @@ mod config;
 use std;
 use reqwest;
 use discord_rich_presence::{DiscordIpc, DiscordIpcClient};
+use rbx_cookie;
 
 #[tokio::main]
 async fn main() {
+	println!("Application started");
+
 	// Get configuration
 	let config = utils::get_config();
+	let token = rbx_cookie::get_value(); // Get token from the environment
 
 	// Create client for Roblox API
 	let roblox_client = roblox::RobloxAPI {
-		token: config.token,
+		// If token isn't found in env, try using one from the config
+		token: token.unwrap_or_else(|| config.token),
 		client: reqwest::Client::new()
 	};
 

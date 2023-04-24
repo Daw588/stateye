@@ -40,7 +40,10 @@ fn token_to_cookie(token: &str) -> String {
 
 impl RobloxAPI {
 	pub async fn get_user_auth_info(&self) -> Result<AuthInfo, Error> {
-		// Get information about the user from the auth token (specifically the userid so we can use it to get their presence)
+		/*
+			Get information about the user from the auth token
+			(specifically the userid so we can use it to get their presence)
+		*/
 		let response = self.client.get("https://users.roblox.com/v1/users/authenticated")
 			.header("Cookie", token_to_cookie(self.token.as_str()))
 			.header("Accept", "application/json")
@@ -71,9 +74,12 @@ impl RobloxAPI {
 	}
 
 	pub async fn get_place_icon_url(&self, universe_id: i64) -> Result<String, Error> {
-		let response = self.client.get(format!("https://thumbnails.roblox.com/v1/games/icons?universeIds={}&size=512x512&format=Png&isCircular=false", universe_id))
-			.send()
-			.await;
+		let response = self.client.get(
+			format!(
+				"https://thumbnails.roblox.com/v1/games/icons?universeIds={}&size=512x512&format=Png&isCircular=false",
+				universe_id
+			)
+		).send().await;
 
 		if !response.is_ok() {
 			return Err(Error::new(ErrorKind::ConnectionRefused, "Something unexpected happen!"));

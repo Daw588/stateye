@@ -40,8 +40,6 @@ pub fn get_config() -> Config {
 		studio: true
 	};
 
-	println!("{}", config_path);
-
 	// Read the config file
 	let config_file = fs::read_to_string(config_path);
 
@@ -50,6 +48,8 @@ pub fn get_config() -> Config {
 		otherwise, use the default config.
 	*/
 	if config_file.is_ok() {
+		println!("Loaded config from {}", config_path);
+
 		// Since we checked with is_ok(), we can safely unwrap()
 		let config_contents = config_file.unwrap();
 
@@ -100,7 +100,7 @@ pub fn get_config() -> Config {
 			//println!("{}", line);
 		}
 	} else {
-		panic!("'{}' was not found!", config::CONFIG_FILE_NAME);
+		println!("Config file not found, using defaults");
 	}
 
 	return config;
