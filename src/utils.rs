@@ -116,44 +116,46 @@ pub fn get_epoch_time() -> time::Duration {
 	return since_the_epoch;
 }
 
+pub struct ActivityInfo<'a> {
+	pub discord_client: &'a mut DiscordIpcClient,
+	pub details: &'a str,
+	pub state: &'a str,
+	pub big_icon_url: &'a str,
+	pub small_icon_url: &'a str,
+	pub buttons: Vec<activity::Button<'a>>,
+	pub elapsed: i64
+}
+
 /// Sets Discord activity presence based on passed in arguments.
-pub fn set_activity(
-	discord_client: &mut DiscordIpcClient,
-	details: &str,
-	state: &str,
-	big_icon_url: &str,
-	small_icon_url: &str,
-	buttons: Vec<activity::Button>,
-	elapsed: i64
-) {
+pub fn set_activity(activiy_info: ActivityInfo) {
 	let mut activity = activity::Activity::new();
 	let mut assets = activity::Assets::new();
 
-	if !big_icon_url.is_empty() {
-		assets = assets.large_image(big_icon_url);
+	if !activiy_info.big_icon_url.is_empty() {
+		assets = assets.large_image(activiy_info.big_icon_url);
 	}
 
-	if !small_icon_url.is_empty() {
-		assets = assets.small_image(small_icon_url);
+	if !activiy_info.small_icon_url.is_empty() {
+		assets = assets.small_image(activiy_info.small_icon_url);
 	}
 
-	activity = activity.state(state);
+	activity = activity.state(activiy_info.state);
 
-	if !big_icon_url.is_empty() || !small_icon_url.is_empty() {
+	if !activiy_info.big_icon_url.is_empty() || !activiy_info.small_icon_url.is_empty() {
 		activity = activity.assets(assets);
 	} 
 
-	if !buttons.is_empty() {
-		activity = activity.buttons(buttons);
+	if !activiy_info.buttons.is_empty() {
+		activity = activity.buttons(activiy_info.buttons);
 	}
 
-	if !details.is_empty() {
-		activity = activity.details(details);
+	if !activiy_info.details.is_empty() {
+		activity = activity.details(activiy_info.details);
 	}
 
-	let timestamps = activity::Timestamps::start(activity::Timestamps::new(), elapsed);
+	let timestamps = activity::Timestamps::start(activity::Timestamps::new(), activiy_info.elapsed);
 
 	activity = activity.timestamps(timestamps);
 
-	discord_client.set_activity(activity).expect("Activity failed!");
+	activiy_info.discord_client.set_activity(activity).expect("Activity failed!");
 }

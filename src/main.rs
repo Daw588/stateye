@@ -5,13 +5,8 @@
 */
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-// Do not include println calls in release build
-macro_rules! println {
-	($($rest:tt)*) => {
-		#[cfg(debug_assertions)]
-		std::println!($($rest)*)
-	}
-}
+#[cfg(debug_assertions)]
+const CARGO_PKG_VERSION: Option<&'static str> = option_env!("CARGO_PKG_VERSION");
 
 mod roblox;
 mod utils;
@@ -22,10 +17,20 @@ use std;
 use reqwest;
 use discord_rich_presence::{DiscordIpc, DiscordIpcClient};
 use rbx_cookie;
+use utils::ActivityInfo;
+
+// Do not include println calls in release build
+macro_rules! println {
+	($($rest:tt)*) => {
+		#[cfg(debug_assertions)]
+		std::println!($($rest)*)
+	}
+}
 
 #[tokio::main]
 async fn main() {
 	println!("Application started");
+	println!("VERSION: {}", CARGO_PKG_VERSION.unwrap_or("NOT_FOUND"));
 
 	// Get configuration
 	let config = utils::get_config();
@@ -106,7 +111,15 @@ async fn main() {
 		}
 			
 		if user_presence.presence_type == roblox::PresenceType::Online && config.website {
-			utils::set_activity(&mut roblox_player, "Browsing", "Website", resources::ROBLOX_ICON_URL, "", vec![], start_timestamp as i64);
+			utils::set_activity(ActivityInfo {
+				discord_client: &mut roblox_player,
+				details: "Browsing",
+				state: "Website",
+				big_icon_url: resources::ROBLOX_ICON_URL,
+				small_icon_url: "",
+				buttons: vec![],
+				elapsed: start_timestamp as i64
+			});
 		} else if user_presence.presence_type == roblox::PresenceType::InGame && config.player {
 			let universe_id = user_presence.universe_id.unwrap();
 			
@@ -128,18 +141,46 @@ async fn main() {
 				println!("Place Info: {:?}", place_info);
 				println!("Place Icon URL: {:?}", place_icon_url);
 
-				utils::set_activity(&mut roblox_player, "Playing", place_info.name.as_str(), place_icon_url.as_str(), resources::ROBLOX_ICON_URL, vec![
-					discord_rich_presence::activity::Button::new("Game Page", place_info.url.as_str())
-				], start_timestamp as i64);
+				utils::set_activity(ActivityInfo {
+					discord_client: &mut roblox_player,
+					details: "Playing",
+					state: place_info.name.as_str(),
+					big_icon_url: place_icon_url.as_str(),
+					small_icon_url: resources::ROBLOX_ICON_URL,
+					buttons: vec![
+						discord_rich_presence::activity::Button::new("Game Page", place_info.url.as_str())
+					],
+					elapsed: start_timestamp as i64
+				});
 			}
 		} else if user_presence.presence_type == roblox::PresenceType::InStudio && config.studio {
-			let place_info_res = roblox_client.get_place_info(user_presence.place_id.unwrap()).await;
-			if place_info_res.is_ok() {
-				let place_info = place_info_res.unwrap();
-
-				utils::set_activity(&mut roblox_studio, "Developing", place_info.name.as_str(), resources::ROBLOX_STUDIO_ICON_URL, "", vec![
-					discord_rich_presence::activity::Button::new("Game Page", place_info.url.as_str())
-				], start_timestamp as i64);
+			// It it possible that place id may not be provided by Roblox
+			if user_presence.place_id.is_some() {
+				let place_info_res = roblox_client.get_place_info(user_presence.place_id.unwrap()).await;
+				if place_info_res.is_ok() {
+					let place_info = place_info_res.unwrap();
+					utils::set_activity(ActivityInfo {
+						discord_client: &mut roblox_studio,
+						details: "Developing",
+						state: place_info.name.as_str(),
+						big_icon_url: resources::ROBLOX_STUDIO_ICON_URL,
+						small_icon_url: "",
+						buttons: vec![
+							discord_rich_presence::activity::Button::new("Game Page", place_info.url.as_str())
+						],
+						elapsed: start_timestamp as i64
+					});
+				}
+			} else {
+				utils::set_activity(ActivityInfo {
+					discord_client: &mut roblox_studio,
+					details: "Developing",
+					state: "Unknown",
+					big_icon_url: resources::ROBLOX_STUDIO_ICON_URL,
+					small_icon_url: "",
+					buttons: vec![],
+					elapsed: start_timestamp as i64
+				});
 			}
 		} else {
 			// The user is offline, clear their activity status
