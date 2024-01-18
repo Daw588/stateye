@@ -35,7 +35,9 @@ pub struct UserPresence {
 /// 
 /// eg. `"secret"` -> `".ROBLOSECURITY=secret"`
 fn token_to_cookie(token: &str) -> String {
-	format!(".ROBLOSECURITY={}", token)
+	// Change some possible misformatting when copying the token
+	let token_cookie = format!(".ROBLOSECURITY={}", token).replace(".ROBLOSECURITY=.ROBLOSECURITY=", ".ROBLOSECURITY=").replace("^", "");
+	return token_cookie;
 }
 
 impl RobloxAPI {
@@ -65,7 +67,7 @@ impl RobloxAPI {
 			.json::<HashMap<String, String>>()
 			.await;
 		*/
-	
+
 		let id = roblox_auth["id"].as_i64().expect("Failed to fetch user id");
 	
 		return Ok(AuthInfo {
@@ -138,7 +140,7 @@ impl RobloxAPI {
 			.json::<serde_json::Value>()
 			.await
 			.unwrap();
-	
+
 		let roblox_presence = &roblox_presence["userPresences"][0];
 
 		let presence_type_id = roblox_presence["userPresenceType"].as_i64().unwrap();
