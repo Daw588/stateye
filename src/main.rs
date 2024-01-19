@@ -27,8 +27,7 @@ macro_rules! println {
 	}
 }
 
-#[tokio::main]
-async fn main() {
+fn main() {
 	println!("Application started");
 	println!("VERSION: {}", CARGO_PKG_VERSION.unwrap_or("NOT_FOUND"));
 
@@ -45,7 +44,7 @@ async fn main() {
 	let roblox_client = roblox::RobloxAPI {
 		// If token isn't found in env, try using one from the config
 		token,
-		client: reqwest::Client::new()
+		client: reqwest::blocking::Client::new()
 	};
 
 	/*
@@ -73,13 +72,13 @@ async fn main() {
 		other useful information for tracking their
 		activity on Roblox.
 	*/
-	let mut auth_info_res = roblox_client.get_user_auth_info().await;
+	let mut auth_info_res = roblox_client.get_user_auth_info();
 
 	// If response fails
 	if !auth_info_res.is_ok() {
 		// Keep making requests until successful requests gets handled
 		loop {
-			let response = roblox_client.get_user_auth_info().await;
+			let response = roblox_client.get_user_auth_info();
 			if response.is_ok() {
 				// Update auth info response object
 				auth_info_res = response;
@@ -99,7 +98,7 @@ async fn main() {
 	
 	// Update the Discord activity presence periodically
 	loop {
-		let user_presence_res = roblox_client.get_user_presence(auth_info.id).await;
+		let user_presence_res = roblox_client.get_user_presence(auth_info.id);
 
 		// Sometimes requests like this might fail, do not crash!
 		if !user_presence_res.is_ok() {
@@ -135,8 +134,8 @@ async fn main() {
 			let universe_id = user_presence.universe_id.unwrap();
 			
 			// Fetch place details
-			let place_info_res = roblox_client.get_place_info(user_presence.place_id.unwrap()).await;
-			let place_icon_url_res = roblox_client.get_place_icon_url(universe_id).await;
+			let place_info_res = roblox_client.get_place_info(user_presence.place_id.unwrap());
+			let place_icon_url_res = roblox_client.get_place_icon_url(universe_id);
 
 			if place_info_res.is_ok() && place_icon_url_res.is_ok() {
 				// Safely unwrap() contents
@@ -167,7 +166,7 @@ async fn main() {
 		} else if user_presence.presence_type == roblox::PresenceType::InStudio && config.studio {
 			// It it possible that place id may not be provided by Roblox
 			if user_presence.place_id.is_some() {
-				let place_info_res = roblox_client.get_place_info(user_presence.place_id.unwrap()).await;
+				let place_info_res = roblox_client.get_place_info(user_presence.place_id.unwrap());
 				if place_info_res.is_ok() {
 					let place_info = place_info_res.unwrap();
 					utils::set_activity(ActivityInfo {

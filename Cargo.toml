@@ -4,8 +4,7 @@ version = "0.3.3"
 edition = "2021"
 
 [dependencies]
-reqwest = { version = "0.11.12", features = ["json"] } # Make requests to Roblox API
-tokio = { version = "1.21.2", features = ["full"] } # Allow asynchronous flow in the main method
+reqwest = { version = "0.11.12", features = ["json", "blocking"] } # Make requests to Roblox API
 serde_json = "1" # Serialize JSON received from the Roblox API responses
 discord-rich-presence = "0.2.3" # Change discord presence
 rbx_cookie = "0.1.2" # Get ".ROBLOSECURITY" token from the environment

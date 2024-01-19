@@ -7,7 +7,7 @@ pub struct PlaceInfo {
 }
 
 pub struct RobloxAPI {
-	pub client: reqwest::Client,
+	pub client: reqwest::blocking::Client,
 	pub token: String
 }
 
@@ -32,7 +32,7 @@ pub struct UserPresence {
 }
 
 impl RobloxAPI {
-	pub async fn get_user_auth_info(&self) -> Result<AuthInfo, Error> {
+	pub fn get_user_auth_info(&self) -> Result<AuthInfo, Error> {
 		/*
 			Get information about the user from the auth token
 			(specifically the userid so we can use it to get their presence)
@@ -40,8 +40,7 @@ impl RobloxAPI {
 		let response = self.client.get("https://users.roblox.com/v1/users/authenticated")
 			.header("Cookie", self.token.as_str())
 			.header("Accept", "application/json")
-			.send()
-			.await;
+			.send();
 
 		if !response.is_ok() {
 			return Err(Error::new(ErrorKind::ConnectionRefused, "Something unexpected happen!"));
@@ -50,7 +49,6 @@ impl RobloxAPI {
 		let roblox_auth = response
 			.unwrap()
 			.json::<serde_json::Value>()
-			.await
 			.unwrap();
 
 		/*
@@ -66,13 +64,13 @@ impl RobloxAPI {
 		});
 	}
 
-	pub async fn get_place_icon_url(&self, universe_id: i64) -> Result<String, Error> {
+	pub fn get_place_icon_url(&self, universe_id: i64) -> Result<String, Error> {
 		let response = self.client.get(
 			format!(
 				"https://thumbnails.roblox.com/v1/games/icons?universeIds={}&size=512x512&format=Png&isCircular=false",
 				universe_id
 			)
-		).send().await;
+		).send();
 
 		if !response.is_ok() {
 			return Err(Error::new(ErrorKind::ConnectionRefused, "Something unexpected happen!"));
@@ -81,7 +79,6 @@ impl RobloxAPI {
 		let place_icon = response
 			.unwrap()
 			.json::<serde_json::Value>()
-			.await
 			.unwrap();
 		
 		let place_icon_url = &place_icon["data"][0]["imageUrl"];
@@ -90,11 +87,10 @@ impl RobloxAPI {
 		return Ok(place_icon_url);
 	}
 
-	pub async fn get_place_info(&self, place_id: i64) -> Result<PlaceInfo, Error> {
+	pub fn get_place_info(&self, place_id: i64) -> Result<PlaceInfo, Error> {
 		let response = self.client.get(format!("https://games.roblox.com/v1/games/multiget-place-details?placeIds={}", place_id))
 			.header("Cookie", self.token.as_str())
-			.send()
-			.await;
+			.send();
 
 		if !response.is_ok() {
 			return Err(Error::new(ErrorKind::ConnectionRefused, "Something unexpected happen!"));
@@ -103,7 +99,6 @@ impl RobloxAPI {
 		let place_info = response
 			.unwrap()
 			.json::<serde_json::Value>()
-			.await
 			.unwrap();
 		
 		let place_info = &place_info[0];
@@ -114,13 +109,12 @@ impl RobloxAPI {
 		});
 	}
 
-	pub async fn get_user_presence(&self, user_id: i64) -> Result<UserPresence, Error> {
+	pub fn get_user_presence(&self, user_id: i64) -> Result<UserPresence, Error> {
 		let response = self.client.post("https://presence.roblox.com/v1/presence/users")
 			.header("Cookie", self.token.as_str())
 			.header("Content-Type", "application/json")
 			.body(format!("{{\"userIds\":[{}]}}", user_id))
-			.send()
-			.await;
+			.send();
 
 		if !response.is_ok() {
 			return Err(Error::new(ErrorKind::ConnectionRefused, "Something unexpected happen!"));
@@ -129,7 +123,6 @@ impl RobloxAPI {
 		let roblox_presence = response
 			.unwrap()
 			.json::<serde_json::Value>()
-			.await
 			.unwrap();
 
 		let roblox_presence = &roblox_presence["userPresences"][0];
