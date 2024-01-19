@@ -31,15 +31,6 @@ pub struct UserPresence {
 	pub universe_id: Option<i64>
 }
 
-/// Formats given token to be fit to be a cookie.
-/// 
-/// eg. `"secret"` -> `".ROBLOSECURITY=secret"`
-fn token_to_cookie(token: &str) -> String {
-	// Change some possible misformatting when copying the token
-	let token_cookie = format!(".ROBLOSECURITY={}", token).replace(".ROBLOSECURITY=.ROBLOSECURITY=", ".ROBLOSECURITY=").replace("^", "");
-	return token_cookie;
-}
-
 impl RobloxAPI {
 	pub async fn get_user_auth_info(&self) -> Result<AuthInfo, Error> {
 		/*
@@ -47,7 +38,7 @@ impl RobloxAPI {
 			(specifically the userid so we can use it to get their presence)
 		*/
 		let response = self.client.get("https://users.roblox.com/v1/users/authenticated")
-			.header("Cookie", token_to_cookie(self.token.as_str()))
+			.header("Cookie", self.token.as_str())
 			.header("Accept", "application/json")
 			.send()
 			.await;
@@ -101,7 +92,7 @@ impl RobloxAPI {
 
 	pub async fn get_place_info(&self, place_id: i64) -> Result<PlaceInfo, Error> {
 		let response = self.client.get(format!("https://games.roblox.com/v1/games/multiget-place-details?placeIds={}", place_id))
-			.header("Cookie", token_to_cookie(self.token.as_str()))
+			.header("Cookie", self.token.as_str())
 			.send()
 			.await;
 
@@ -125,7 +116,7 @@ impl RobloxAPI {
 
 	pub async fn get_user_presence(&self, user_id: i64) -> Result<UserPresence, Error> {
 		let response = self.client.post("https://presence.roblox.com/v1/presence/users")
-			.header("Cookie", token_to_cookie(self.token.as_str()))
+			.header("Cookie", self.token.as_str())
 			.header("Content-Type", "application/json")
 			.body(format!("{{\"userIds\":[{}]}}", user_id))
 			.send()
