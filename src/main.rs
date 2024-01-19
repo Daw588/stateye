@@ -34,15 +34,26 @@ async fn main() {
 
 	// Get configuration
 	let config = utils::get_config();
-	let token = rbx_cookie::get_value(); // Get token from the environment
+	let machine_extracted_token = rbx_cookie::get_value(); // Get token from the environment
+
+	let token = match machine_extracted_token {
+		Some(_) => format!(".ROBLOSECURITY={}", machine_extracted_token.unwrap()),
+		None => config.token
+	};
 
 	// Create client for Roblox API
 	let roblox_client = roblox::RobloxAPI {
 		// If token isn't found in env, try using one from the config
-		token: token.unwrap_or_else(|| config.token),
+		token,
 		client: reqwest::Client::new()
 	};
 
+	/*
+		TODO: Discord may not always be open, in which case, client will fail to connect
+		and, therefore, result in an error. We should handle such case without throwing error
+		by informing the user to open Discord.exe
+	*/
+	
 	// Setup Discord IPC clients
 	let mut roblox_player = DiscordIpcClient::new(config::PLAYER_DISCORD_APP_ID).unwrap();
 	let mut roblox_studio = DiscordIpcClient::new(config::STUDIO_DISCORD_APP_ID).unwrap();
